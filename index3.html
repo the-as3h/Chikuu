@@ -1,0 +1,1259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
+  <title>CHIKUU — A Little Story For You</title>
+  
+  <!-- Romantic Web Fonts with System Fallbacks -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com">
+  <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600;700&family=Nunito:wght@400;600;700;800&family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+
+  <style>
+    /* ==========================================================
+       DESIGN SYSTEM & CSS VARIABLES
+       ========================================================== */
+    :root {
+      --c-blush: #FFC0CB;
+      --c-rose: #FF8FA3;
+      --c-deep-rose: #E85D75;
+      --c-cream: #FFF8F0;
+      --c-paper: #FFFDF9;
+      --c-lavender: #E8DDF8;
+      --c-peach: #FFD6B0;
+      --c-gold: #FFD166;
+      --c-dark: #3F3342;
+      --c-muted: #7E6B80;
+      
+      /* Gradients */
+      --bg-gradient-day: linear-gradient(180deg, #FFE6EE 0%, #FFF8F0 50%, #E8DDF8 100%);
+      --bg-gradient-twilight: linear-gradient(180deg, #4A3B56 0%, #684F6E 40%, #A47E99 80%, #D4A5B8 100%);
+      --bg-gradient-sunset: linear-gradient(180deg, #FFD6B0 0%, #FFB5C5 50%, #E8DDF8 100%);
+      --bg-gradient-night: linear-gradient(180deg, #2B1E3A 0%, #462B54 50%, #703D6A 100%);
+      
+      --font-heading: 'Outfit', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-body: 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      --font-hand: 'Caveat', cursive, sans-serif;
+      
+      --shadow-soft: 0 10px 30px rgba(255, 143, 163, 0.25);
+      --shadow-float: 0 15px 35px rgba(109, 76, 65, 0.12);
+      --radius-lg: 28px;
+      --radius-md: 18px;
+      --radius-sm: 12px;
+    }
+
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    html, body {
+      width: 100%;
+      min-height: 100%;
+      background: var(--c-cream);
+      color: var(--c-dark);
+      font-family: var(--font-body);
+      overflow-x: hidden;
+      font-size: 16px;
+      line-height: 1.6;
+    }
+
+    #ambient-canvas {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    /* Top Control Bar */
+    .top-bar {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      padding: 16px 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .brand-pill {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 6px 16px;
+      border-radius: 999px;
+      border: 1px solid rgba(255, 143, 163, 0.35);
+      box-shadow: 0 4px 15px rgba(255, 143, 163, 0.15);
+      font-family: var(--font-heading);
+      font-size: 0.85rem;
+      font-weight: 800;
+      letter-spacing: 0.18em;
+      color: var(--c-deep-rose);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.3s ease;
+    }
+
+    .brand-pill:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(255, 143, 163, 0.25);
+    }
+
+    .audio-btn {
+      pointer-events: auto;
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 143, 163, 0.35);
+      width: 42px;
+      height: 42px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 1.1rem;
+      color: var(--c-deep-rose);
+      box-shadow: 0 4px 15px rgba(255, 143, 163, 0.15);
+      transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .audio-btn:hover {
+      transform: scale(1.1);
+    }
+
+    /* Scene Stage System */
+    #story-stage {
+      position: relative;
+      width: 100%;
+      min-height: 100vh;
+      z-index: 2;
+    }
+
+    .scene {
+      display: none;
+      min-height: 100vh;
+      width: 100%;
+      padding: 90px 20px 80px 20px;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      position: relative;
+      opacity: 0;
+      transform: translateY(20px) scale(0.98);
+      transition: opacity 0.6s ease, transform 0.6s cubic-bezier(0.2, 0.9, 0.3, 1);
+    }
+
+    .scene.active {
+      display: flex;
+      opacity: 1;
+      transform: translateY(0) scale(1);
+    }
+
+    /* Typography */
+    .chikuu-logo {
+      font-family: var(--font-heading);
+      font-weight: 800;
+      letter-spacing: 0.22em;
+      text-transform: uppercase;
+      background: linear-gradient(135deg, #FF6F8D 0%, #FFA270 50%, #FF6584 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      display: inline-block;
+      text-shadow: 0 0 25px rgba(255, 143, 163, 0.4);
+      position: relative;
+      user-select: none;
+    }
+
+    .chikuu-logo-hero {
+      font-size: clamp(2.4rem, 8vw, 4.5rem);
+      margin: 15px 0;
+      animation: chikuuFloat 4s ease-in-out infinite, chikuuGlow 3s alternate infinite;
+    }
+
+    .chikuu-logo-hero::after {
+      content: '✨';
+      position: absolute;
+      top: -15px;
+      right: -25px;
+      font-size: 1.2rem;
+      animation: sparkle 2s infinite ease-in-out;
+    }
+
+    .chikuu-badge {
+      font-family: var(--font-heading);
+      font-size: 0.8rem;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      color: var(--c-deep-rose);
+      background: rgba(255, 255, 255, 0.7);
+      padding: 4px 14px;
+      border-radius: 99px;
+      margin-bottom: 12px;
+      display: inline-block;
+      border: 1px dashed rgba(255, 143, 163, 0.5);
+    }
+
+    /* Characters Stage Container */
+    .characters-stage {
+      display: flex;
+      align-items: flex-end;
+      justify-content: center;
+      gap: clamp(10px, 4vw, 40px);
+      margin: 20px 0;
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+    }
+
+    .character-wrap {
+      position: relative;
+      width: clamp(110px, 30vw, 160px);
+      transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .character-svg {
+      width: 100%;
+      height: auto;
+      filter: drop-shadow(0 10px 15px rgba(0, 0, 0, 0.08));
+    }
+
+    .char-idle {
+      animation: idleBreathe 3.5s ease-in-out infinite;
+    }
+    .char-hop {
+      animation: cuteHop 2s ease-in-out infinite;
+    }
+    .char-blink {
+      animation: blinkEye 4s infinite;
+    }
+    .char-ear-wiggle {
+      transform-origin: 50% 50%;
+      animation: earWiggle 5s ease-in-out infinite;
+    }
+
+    /* Buttons */
+    .btn-romantic {
+      background: linear-gradient(135deg, #FF8FA3 0%, #FF6584 100%);
+      color: #fff;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: clamp(0.95rem, 2.5vw, 1.1rem);
+      padding: 14px 34px;
+      border: none;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 10px 25px rgba(255, 101, 132, 0.35);
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+      text-decoration: none;
+    }
+
+    .btn-romantic:hover {
+      transform: translateY(-3px) scale(1.03);
+      box-shadow: 0 15px 30px rgba(255, 101, 132, 0.45);
+    }
+
+    .btn-romantic:active {
+      transform: translateY(1px) scale(0.98);
+    }
+
+    .btn-soft {
+      background: rgba(255, 255, 255, 0.9);
+      color: var(--c-deep-rose);
+      border: 1.5px solid var(--c-rose);
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 0.95rem;
+      padding: 13px 22px;
+      border-radius: 999px;
+      cursor: pointer;
+      box-shadow: 0 6px 18px rgba(255, 143, 163, 0.15);
+      transition: all 0.25s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin: 8px 6px;
+    }
+
+    .btn-soft:hover {
+      background: #FFF0F4;
+      transform: translateY(-2px);
+    }
+
+    /* Scene Specific Cards */
+    .scene-intro-card, .meadow-card, .spotlight-card, .question-box, .final-stage-card {
+      background: rgba(255, 255, 255, 0.72);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      border-radius: var(--radius-lg);
+      padding: clamp(24px, 5vw, 40px) clamp(20px, 4vw, 36px);
+      box-shadow: var(--shadow-soft);
+      max-width: 580px;
+      width: 100%;
+      position: relative;
+    }
+
+    #scene-1 { background: var(--bg-gradient-day); }
+    #scene-2 { background: var(--bg-gradient-sunset); }
+    #scene-3 { 
+      background: var(--bg-gradient-twilight); 
+      color: #FFF5FB; 
+    }
+    #scene-3 .spotlight-card {
+      background: rgba(43, 30, 58, 0.55);
+      border-color: rgba(255, 255, 255, 0.15);
+    }
+    #scene-3 .chikuu-badge {
+      background: rgba(255, 255, 255, 0.15);
+      color: #FFD1DC;
+      border-color: rgba(255, 209, 220, 0.3);
+    }
+    #scene-4 { background: linear-gradient(180deg, #FDECEF 0%, #FFF8F0 50%, #F5ECF9 100%); }
+    #scene-5 { background: var(--bg-gradient-sunset); }
+    #scene-6 { background: var(--bg-gradient-day); }
+    #scene-7 { background: var(--bg-gradient-night); color: #fff; }
+    #scene-7 .final-stage-card {
+      background: rgba(255, 255, 255, 0.08);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+
+    /* Scene 4 Minimal Letter Styles */
+    .letter-envelope-container {
+      width: 100%;
+      max-width: 540px;
+      margin: 15px auto;
+    }
+
+    .letter-paper {
+      background: var(--c-paper);
+      border-radius: var(--radius-md);
+      border: 1px solid #FFE4E8;
+      box-shadow: 0 15px 40px rgba(232, 93, 117, 0.12), 0 2px 6px rgba(0,0,0,0.04);
+      padding: clamp(30px, 6vw, 44px) clamp(24px, 5vw, 38px);
+      text-align: left;
+      position: relative;
+    }
+
+    .letter-wax-seal {
+      width: 52px;
+      height: 52px;
+      background: linear-gradient(135deg, #E85D75, #B72146);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #fff;
+      font-family: var(--font-heading);
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.1em;
+      box-shadow: 0 4px 12px rgba(183, 33, 70, 0.35);
+      position: absolute;
+      top: 20px;
+      right: 22px;
+      transform: rotate(-10deg);
+      border: 2px dashed rgba(255, 255, 255, 0.4);
+    }
+
+    .letter-salutation {
+      font-family: var(--font-hand);
+      font-size: 2.3rem;
+      font-weight: 700;
+      color: var(--c-deep-rose);
+      margin-bottom: 20px;
+      line-height: 1.2;
+    }
+
+    .handwritten-sticky {
+      background: #FFF9C4;
+      border: 1px dashed #FBC02D;
+      color: #5D4037;
+      font-family: var(--font-hand);
+      font-size: 1.45rem;
+      font-weight: 700;
+      padding: 12px 18px;
+      border-radius: 10px;
+      margin: 10px 0 28px 0;
+      display: block;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+      transform: rotate(-1deg);
+      line-height: 1.4;
+    }
+
+    .letter-signoff {
+      margin-top: 15px;
+      font-family: var(--font-hand);
+      font-size: 1.7rem;
+      color: var(--c-deep-rose);
+      line-height: 1.5;
+    }
+
+    /* Scene 5 Scrapbook Grid */
+    .memories-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+      gap: 18px;
+      width: 100%;
+      max-width: 680px;
+      margin: 20px 0;
+    }
+
+    .memory-card {
+      background: rgba(255, 255, 255, 0.9);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-md);
+      padding: 22px 18px;
+      box-shadow: var(--shadow-float);
+      border: 1px solid rgba(255, 255, 255, 0.8);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.3s ease;
+      cursor: pointer;
+      text-align: center;
+    }
+
+    .memory-card:hover {
+      transform: translateY(-6px) rotate(1deg);
+      box-shadow: 0 15px 35px rgba(255, 143, 163, 0.3);
+    }
+
+    .memory-icon {
+      font-size: 2.2rem;
+      margin-bottom: 10px;
+      display: inline-block;
+    }
+
+    .memory-text {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--c-dark);
+      line-height: 1.5;
+    }
+
+    /* Scene 6 Interactive Feedback */
+    .response-feedback {
+      min-height: 52px;
+      margin-top: 18px;
+      font-family: var(--font-hand);
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--c-deep-rose);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: all 0.3s ease;
+    }
+
+    .response-feedback.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .heart-halo {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 320px;
+      height: 320px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 143, 163, 0.2) 0%, rgba(255, 255, 255, 0) 70%);
+      pointer-events: none;
+      animation: pulseHalo 4s infinite ease-in-out;
+    }
+
+    /* Bottom Navigation Dots */
+    .nav-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 8px 16px;
+      border-radius: 999px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+      z-index: 100;
+      border: 1px solid rgba(255, 143, 163, 0.3);
+    }
+
+    .nav-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: #E8D3DC;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .nav-dot.active {
+      width: 26px;
+      background: var(--c-deep-rose);
+      border-radius: 8px;
+    }
+
+    /* Keyframes */
+    @keyframes idleBreathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-5px); }
+    }
+
+    @keyframes cuteHop {
+      0%, 100% { transform: translateY(0) scale(1); }
+      40% { transform: translateY(-9px) scale(0.97, 1.03); }
+      50% { transform: translateY(0) scale(1.03, 0.97); }
+    }
+
+    @keyframes blinkEye {
+      0%, 96%, 100% { transform: scaleY(1); }
+      98% { transform: scaleY(0.1); }
+    }
+
+    @keyframes earWiggle {
+      0%, 90%, 100% { transform: rotate(0deg); }
+      93% { transform: rotate(-8deg); }
+      96% { transform: rotate(8deg); }
+    }
+
+    @keyframes chikuuFloat {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-6px); }
+    }
+
+    @keyframes chikuuGlow {
+      from { filter: drop-shadow(0 0 10px rgba(255, 143, 163, 0.5)); }
+      to { filter: drop-shadow(0 0 25px rgba(255, 101, 132, 0.85)); }
+    }
+
+    @keyframes sparkle {
+      0%, 100% { opacity: 0.3; transform: scale(0.8) rotate(0deg); }
+      50% { opacity: 1; transform: scale(1.2) rotate(15deg); }
+    }
+
+    @keyframes pulseHalo {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.9); opacity: 0.4; }
+      50% { transform: translate(-50%, -50%) scale(1.2); opacity: 0.85; }
+    }
+
+    #burst-layer {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 999;
+    }
+
+    .heart-particle {
+      position: absolute;
+      pointer-events: none;
+      font-size: 1.3rem;
+      animation: floatBurst 1.8s forwards ease-out;
+    }
+
+    @keyframes floatBurst {
+      0% { opacity: 1; transform: translate(0, 0) scale(0.5); }
+      100% { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(1.4); }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+      #ambient-canvas { display: none; }
+    }
+
+    @media (max-width: 480px) {
+      .scene { padding-top: 75px; padding-bottom: 75px; }
+      .letter-paper { padding: 24px 18px; }
+      .memories-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Ambient Drifting Hearts Canvas -->
+  <canvas id="ambient-canvas"></canvas>
+
+  <!-- Interactive Heart Burst Container -->
+  <div id="burst-layer"></div>
+
+  <!-- Persistent Top Header -->
+  <header class="top-bar">
+    <div class="brand-pill">
+      <span>CHIKUU</span>
+      <span style="font-size: 0.8rem;">🐃💗</span>
+    </div>
+    <button class="audio-btn" id="audio-toggle" title="Toggle gentle music" aria-label="Toggle Background Music">
+      🎵
+    </button>
+  </header>
+
+  <!-- Main Story Scenes Stage -->
+  <main id="story-stage">
+
+    <!-- ==========================================
+         SCENE 1: THE MAGICAL ENTRANCE
+         ========================================== -->
+    <section class="scene active" id="scene-1">
+      <div class="scene-intro-card">
+        <span class="chikuu-badge">A LITTLE STORY, MADE JUST FOR YOU</span>
+        
+        <h1 class="chikuu-logo chikuu-logo-hero">CHIKUU</h1>
+        
+        <p style="font-family: var(--font-hand); font-size: clamp(1.4rem, 3.5vw, 1.9rem); color: var(--c-muted); margin: 8px 0;">
+          A story of my favorite Buffalo & her Pigguu...
+        </p>
+        
+        <!-- Buffalo (CHIKUU) and Pigguu (You) -->
+        <div class="characters-stage">
+          <!-- Buffalo (CHIKUU) -->
+          <div class="character-wrap char-idle" id="hero-buffalo">
+            <svg class="character-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <path d="M55,65 Q30,40 25,18 Q45,28 65,52" fill="#4E342E" stroke="#3E2723" stroke-width="2" />
+                <path d="M145,65 Q170,40 175,18 Q155,28 135,52" fill="#4E342E" stroke="#3E2723" stroke-width="2" />
+                <path class="char-ear-wiggle" d="M40,85 C25,75 20,95 38,100 Z" fill="#6D4C41" />
+                <path class="char-ear-wiggle" d="M160,85 C175,75 180,95 162,100 Z" fill="#6D4C41" />
+                <ellipse cx="100" cy="130" rx="68" ry="60" fill="#795548" />
+                <ellipse cx="100" cy="142" rx="42" ry="36" fill="#8D6E63" />
+                <ellipse cx="100" cy="85" rx="52" ry="46" fill="#6D4C41" />
+                <ellipse cx="66" cy="100" rx="9" ry="6" fill="#FF8FA3" opacity="0.75" />
+                <ellipse cx="134" cy="100" rx="9" ry="6" fill="#FF8FA3" opacity="0.75" />
+                <ellipse cx="100" cy="102" rx="28" ry="19" fill="#BCAAA4" />
+                <ellipse cx="91" cy="103" rx="4" ry="5" fill="#4E342E" />
+                <ellipse cx="109" cy="103" rx="4" ry="5" fill="#4E342E" />
+                <path d="M95,112 Q100,116 105,112" stroke="#4E342E" stroke-width="2.5" fill="none" stroke-linecap="round" />
+                <g class="char-blink" style="transform-origin: 100px 78px;">
+                  <circle cx="74" cy="78" r="8" fill="#2E1C14" />
+                  <circle cx="72" cy="75" r="2.8" fill="#FFF" />
+                  <circle cx="76" cy="79" r="1.3" fill="#FFF" />
+                  <circle cx="126" cy="78" r="8" fill="#2E1C14" />
+                  <circle cx="124" cy="75" r="2.8" fill="#FFF" />
+                  <circle cx="128" cy="79" r="1.3" fill="#FFF" />
+                </g>
+                <ellipse cx="78" cy="184" rx="14" ry="9" fill="#4E342E" />
+                <ellipse cx="122" cy="184" rx="14" ry="9" fill="#4E342E" />
+              </g>
+            </svg>
+          </div>
+
+          <!-- Pigguu (You) -->
+          <div class="character-wrap char-hop" id="hero-pig">
+            <svg class="character-svg" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+              <g>
+                <polygon points="50,42 75,70 35,78" fill="#F48FB1" stroke="#F06292" stroke-width="2" class="char-ear-wiggle" />
+                <polygon points="150,42 125,70 165,78" fill="#F48FB1" stroke="#F06292" stroke-width="2" class="char-ear-wiggle" />
+                <circle cx="100" cy="132" r="58" fill="#F8BBD0" />
+                <ellipse cx="100" cy="144" rx="36" ry="32" fill="#FCE4EC" />
+                <circle cx="100" cy="90" r="48" fill="#F8BBD0" />
+                <ellipse cx="65" cy="102" rx="9" ry="6" fill="#FF8FA3" opacity="0.85" />
+                <ellipse cx="135" cy="102" rx="9" ry="6" fill="#FF8FA3" opacity="0.85" />
+                <ellipse cx="100" cy="100" rx="20" ry="14" fill="#F48FB1" stroke="#F06292" stroke-width="2" />
+                <circle cx="93" cy="100" r="3.5" fill="#C2185B" />
+                <circle cx="107" cy="100" r="3.5" fill="#C2185B" />
+                <g class="char-blink" style="transform-origin: 100px 78px;">
+                  <circle cx="75" cy="76" r="7.5" fill="#3E2723" />
+                  <circle cx="73" cy="73" r="2.5" fill="#FFF" />
+                  <circle cx="125" cy="76" r="7.5" fill="#3E2723" />
+                  <circle cx="123" cy="73" r="2.5" fill="#FFF" />
+                </g>
+                <ellipse cx="76" cy="180" rx="12" ry="8" fill="#F48FB1" />
+                <ellipse cx="124" cy="180" rx="12" ry="8" fill="#F48FB1" />
+                <path d="M128,45 Q135,38 142,45 Q135,52 128,45 Z" fill="#FF4081" />
+                <path d="M142,45 Q149,38 156,45 Q149,52 142,45 Z" fill="#FF4081" />
+                <circle cx="142" cy="45" r="3.5" fill="#FFD54F" />
+              </g>
+            </svg>
+          </div>
+        </div>
+
+        <button class="btn-romantic" onclick="goToScene(2)">
+          <span>Open my heart</span>
+          <span>💗</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCENE 2: OUR LITTLE WORLD (METRO MEMORY)
+         ========================================== -->
+    <section class="scene" id="scene-2">
+      <div class="meadow-card">
+        <span class="chikuu-badge">OUR LITTLE SANCTUARY</span>
+        <h2 class="chikuu-logo" style="font-size: 2.2rem;">CHIKUU</h2>
+        
+        <p style="font-size: 1.15rem; margin: 15px 0; color: #5D4037; font-weight: 600;">
+          “Somewhere in my little world, there will always be a special place for you.”[cite: 1]
+        </p>
+        
+        <div class="characters-stage" style="margin: 15px auto;">
+          <!-- Buffalo (CHIKUU) -->
+          <div class="character-wrap char-idle" style="width: 130px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="120" rx="60" ry="52" fill="#795548" />
+              <ellipse cx="100" cy="80" rx="46" ry="40" fill="#6D4C41" />
+              <path d="M60,60 Q35,42 30,22 Q50,30 68,50" fill="#4E342E" />
+              <path d="M140,60 Q165,42 170,22 Q150,30 132,50" fill="#4E342E" />
+              <ellipse cx="70" cy="95" rx="8" ry="5" fill="#FF8FA3" opacity="0.8" />
+              <ellipse cx="130" cy="95" rx="8" ry="5" fill="#FF8FA3" opacity="0.8" />
+              <ellipse cx="100" cy="95" rx="24" ry="16" fill="#BCAAA4" />
+              <circle cx="93" cy="95" r="3.5" fill="#4E342E" />
+              <circle cx="107" cy="95" r="3.5" fill="#4E342E" />
+              <circle cx="78" cy="74" r="6" fill="#2E1C14" /><circle cx="76" cy="72" r="2" fill="#FFF" />
+              <circle cx="122" cy="74" r="6" fill="#2E1C14" /><circle cx="120" cy="72" r="2" fill="#FFF" />
+            </svg>
+          </div>
+          
+          <div style="font-size: 2.2rem; animation: chikuuFloat 2s ease-in-out infinite; color: #FF4081;">
+            🚇
+          </div>
+
+          <!-- Pigguu (You) -->
+          <div class="character-wrap char-hop" style="width: 125px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="120" r="54" fill="#F8BBD0" />
+              <circle cx="100" cy="80" r="44" fill="#F8BBD0" />
+              <polygon points="55,38 78,65 42,72" fill="#F48FB1" />
+              <polygon points="145,38 122,65 158,72" fill="#F48FB1" />
+              <ellipse cx="68" cy="92" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="132" cy="92" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="100" cy="90" rx="18" ry="12" fill="#F48FB1" stroke="#F06292" stroke-width="2" />
+              <circle cx="94" cy="90" r="3" fill="#C2185B" />
+              <circle cx="106" cy="90" r="3" fill="#C2185B" />
+              <path d="M72,74 Q78,68 84,74" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M116,74 Q122,68 128,74" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <p style="font-size: 1rem; color: #6D4C41; line-height: 1.7; margin-bottom: 20px; font-weight: 600;">
+          “It all started with that metro ride heading home from the office—laughing non-stop, you playfully trying to slap my face, teasingly trying to dirty my white sneakers, stepping off together at our station, and me walking you all the way till your gate. That’s where my heart found home.”
+        </p>
+
+        <button class="btn-romantic" onclick="goToScene(3)">
+          <span>Continue our journey</span>
+          <span>✨</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCENE 3: THE MOMENT I REALIZED (PIGGUU APOLOGIZING)
+         ========================================== -->
+    <section class="scene" id="scene-3">
+      <div class="spotlight-card">
+        <span class="chikuu-badge">WITH HONESTY IN MY HEART</span>
+        
+        <h2 class="chikuu-logo" style="font-size: 2.2rem; filter: brightness(1.2);">CHIKUU</h2>
+        
+        <div class="characters-stage" style="margin: 25px auto;">
+          <!-- Pigguu (You: feeling regretful & head lowered) -->
+          <div class="character-wrap" style="transform: translateY(6px); width: 125px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="135" r="52" fill="#F48FB1" opacity="0.9" />
+              <circle cx="100" cy="94" r="42" fill="#F48FB1" opacity="0.9" />
+              <polygon points="55,50 78,74 42,80" fill="#EC407A" />
+              <polygon points="145,50 122,74 158,80" fill="#EC407A" />
+              <ellipse cx="100" cy="106" rx="18" ry="12" fill="#F06292" />
+              <circle cx="94" cy="106" r="3" fill="#880E4F" />
+              <circle cx="106" cy="106" r="3" fill="#880E4F" />
+              <path d="M74,88 Q80,94 86,88" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M114,88 Q120,94 126,88" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <circle cx="126" cy="96" r="3.2" fill="#80DEEA" opacity="0.9" />
+            </svg>
+          </div>
+
+          <div style="font-size: 1.8rem; opacity: 0.6; filter: grayscale(40%);">
+            💔
+          </div>
+
+          <!-- Buffalo (CHIKUU: feeling hurt/quiet) -->
+          <div class="character-wrap" style="width: 140px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="130" rx="64" ry="55" fill="#5D4037" />
+              <ellipse cx="98" cy="92" rx="48" ry="42" fill="#4E342E" />
+              <path d="M55,75 Q32,55 28,35 Q46,42 63,62" fill="#3E2723" />
+              <path d="M141,75 Q164,55 168,35 Q150,42 133,62" fill="#3E2723" />
+              <ellipse cx="98" cy="108" rx="24" ry="16" fill="#8D6E63" />
+              <circle cx="92" cy="108" r="3" fill="#3E2723" />
+              <circle cx="104" cy="108" r="3" fill="#3E2723" />
+              <path d="M72,82 Q80,88 88,82" stroke="#FFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M112,82 Q120,88 128,82" stroke="#FFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <p style="font-size: clamp(1.05rem, 2.5vw, 1.25rem); font-weight: 600; line-height: 1.7; color: #FFE8F2; max-width: 480px; margin: 0 auto 20px auto;">
+          “You are the one person in front of whom I am completely my true self—and I love every bit of being that person with you. That is why the thought of hurting you breaks me inside.”
+        </p>
+
+        <button class="btn-romantic" style="background: linear-gradient(135deg, #FF6584, #D81B60);" onclick="goToScene(4)">
+          <span>Read my letter</span>
+          <span>✉️</span>
+        </button>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCENE 4: MY LITTLE APOLOGY LETTER (CLEAN & MINIMAL)
+         ========================================== -->
+    <section class="scene" id="scene-4">
+      <span class="chikuu-badge">FROM MY WHOLE HEART</span>
+      
+      <div class="letter-envelope-container">
+        <article class="letter-paper">
+          <div class="letter-wax-seal" title="CHIKUU Seal">
+            CHIKUU
+          </div>
+
+          <h2 class="letter-salutation">My dearest CHIKUU,</h2>
+          
+          <div class="handwritten-sticky">
+            ✍️ Ye hath se likh kr dunga, type krke ni...
+          </div>
+
+          <div class="letter-signoff">
+            <p>With all the love in my heart,</p>
+            <p style="margin-top: 4px; font-weight: 700;">Your Pigguu 🐷</p>
+            <p style="font-size: 1.25rem; color: #E85D75; margin-top: 10px;">Forever sending love to CHIKUU 💗</p>
+          </div>
+        </article>
+      </div>
+
+      <button class="btn-romantic" onclick="goToScene(5)">
+        <span>See our little memories</span>
+        <span>💫</span>
+      </button>
+    </section>
+
+    <!-- ==========================================
+         SCENE 5: TINY MEMORIES OF US
+         ========================================== -->
+    <section class="scene" id="scene-5">
+      <span class="chikuu-badge">PIECES OF US</span>
+      <h2 class="chikuu-logo" style="font-size: 2.2rem;">CHIKUU</h2>
+      <p style="color: #6D4C41; font-weight: 600; margin-bottom: 10px;">The moments I hold closest to my heart</p>
+
+      <div class="memories-grid">
+        <div class="memory-card" onclick="spawnBurst(event)">
+          <div class="memory-icon">🌙</div>
+          <p class="memory-text">“Our late-night 2 AM talks out on the balcony in Mussoorie.”</p>
+        </div>
+
+        <div class="memory-card" onclick="spawnBurst(event)">
+          <div class="memory-icon">🍲</div>
+          <p class="memory-text">“Eating poori chole right in your home’s kitchen while you were cooking just for me.”</p>
+        </div>
+
+        <div class="memory-card" onclick="spawnBurst(event)">
+          <div class="memory-icon">💍</div>
+          <p class="memory-text">“Sitting right by your side on our Roka day — 1st May 2026.”</p>
+        </div>
+
+        <div class="memory-card" onclick="spawnBurst(event)">
+          <div class="memory-icon">🌸</div>
+          <p class="memory-text">“Sitting by your side taking phere at our mandap (Our beautiful future together).”</p>
+        </div>
+      </div>
+
+      <button class="btn-romantic" onclick="goToScene(6)">
+        <span>A question from my heart</span>
+        <span>💖</span>
+      </button>
+    </section>
+
+    <!-- ==========================================
+         SCENE 6: PIGGUU ASKS FOR FORGIVENESS
+         ========================================== -->
+    <section class="scene" id="scene-6">
+      <div class="question-box">
+        <span class="chikuu-badge">HONORING YOUR FEELINGS</span>
+        
+        <div class="characters-stage" style="margin: 15px auto;">
+          <!-- Pigguu offering bouquet to Buffalo -->
+          <div class="character-wrap" style="width: 125px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="125" r="54" fill="#F8BBD0" />
+              <circle cx="100" cy="85" r="44" fill="#F8BBD0" />
+              <polygon points="55,42 78,70 42,76" fill="#F48FB1" />
+              <polygon points="145,42 122,70 158,76" fill="#F48FB1" />
+              <ellipse cx="68" cy="98" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="132" cy="98" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="100" cy="96" rx="18" ry="12" fill="#F48FB1" stroke="#F06292" stroke-width="2" />
+              <circle cx="94" cy="96" r="3" fill="#C2185B" />
+              <circle cx="106" cy="96" r="3" fill="#C2185B" />
+              <circle cx="75" cy="80" r="6" fill="#3E2723" /><circle cx="73" cy="78" r="2" fill="#FFF" />
+              <circle cx="125" cy="80" r="6" fill="#3E2723" /><circle cx="123" cy="78" r="2" fill="#FFF" />
+              <g transform="translate(120, 110)">
+                <circle cx="0" cy="0" r="10" fill="#FF8FA3" />
+                <circle cx="12" cy="-4" r="8" fill="#FFD166" />
+                <circle cx="8" cy="10" r="9" fill="#F48FB1" />
+                <circle cx="4" cy="2" r="4" fill="#FFF" />
+              </g>
+            </svg>
+          </div>
+
+          <!-- Buffalo (CHIKUU) listening softly -->
+          <div class="character-wrap" style="width: 130px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="125" rx="60" ry="52" fill="#795548" />
+              <ellipse cx="100" cy="85" rx="46" ry="40" fill="#6D4C41" />
+              <path d="M60,65 Q35,45 30,25 Q50,32 68,55" fill="#4E342E" />
+              <path d="M140,65 Q165,45 170,25 Q150,32 132,55" fill="#4E342E" />
+              <ellipse cx="70" cy="100" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="130" cy="100" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="100" cy="102" rx="24" ry="16" fill="#BCAAA4" />
+              <circle cx="93" cy="102" r="3.5" fill="#4E342E" />
+              <circle cx="107" cy="102" r="3.5" fill="#4E342E" />
+              <circle cx="78" cy="82" r="6" fill="#2E1C14" /><circle cx="76" cy="80" r="2" fill="#FFF" />
+              <circle cx="122" cy="82" r="6" fill="#2E1C14" /><circle cx="120" cy="80" r="2" fill="#FFF" />
+            </svg>
+          </div>
+        </div>
+
+        <h2 style="font-family: var(--font-heading); font-size: 1.8rem; color: #4E342E; margin-bottom: 8px;">
+          Can I try again, <span class="chikuu-logo" style="font-size: 1.8rem;">CHIKUU</span>?[cite: 1]
+        </h2>
+
+        <p style="color: #6D4C41; font-size: 1rem; margin-bottom: 24px; line-height: 1.6; font-weight: 600;">
+          “I cannot ask you to ignore everything, just try to listen to me and I'll never betray you and never break your heart.”
+        </p>
+
+        <!-- Interactive Choice Buttons -->
+        <div>
+          <button class="btn-soft" onclick="handleChoice('call_now')">
+            <span>Let me call you right away</span>
+            <span>📞</span>
+          </button>
+          
+          <button class="btn-soft" onclick="handleChoice('call_later')">
+            <span>I'll call you later, when I feel right</span>
+            <span>🌷</span>
+          </button>
+        </div>
+
+        <!-- Reassuring Response Box -->
+        <div id="choice-feedback" class="response-feedback"></div>
+
+        <div style="margin-top: 15px;">
+          <button class="btn-romantic" onclick="goToScene(7)">
+            <span>One last message for you</span>
+            <span>✨</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==========================================
+         SCENE 7: THE FINAL CHIKUU MOMENT
+         ========================================== -->
+    <section class="scene" id="scene-7">
+      <div class="final-stage-card">
+        <div class="heart-halo"></div>
+        <span class="chikuu-badge" style="background: rgba(255,255,255,0.15); color: #FFD1DC;">TODAY AND ALWAYS</span>
+        
+        <h1 class="chikuu-logo chikuu-logo-hero" style="font-size: clamp(2.8rem, 9vw, 5rem);">
+          CHIKUU
+        </h1>
+
+        <!-- Buffalo & Pigguu Cuddling -->
+        <div class="characters-stage" style="margin: 20px auto; gap: 0;">
+          <!-- Buffalo (CHIKUU) -->
+          <div class="character-wrap" style="transform: translateX(12px); width: 140px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <ellipse cx="100" cy="125" rx="62" ry="54" fill="#795548" />
+              <ellipse cx="105" cy="85" rx="46" ry="40" fill="#6D4C41" />
+              <path d="M65,65 Q40,45 35,25 Q55,32 73,55" fill="#4E342E" />
+              <path d="M145,65 Q170,45 175,25 Q155,32 137,55" fill="#4E342E" />
+              <ellipse cx="78" cy="98" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="132" cy="98" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="108" cy="98" rx="22" ry="14" fill="#BCAAA4" />
+              <path d="M78,82 Q84,88 90,82" stroke="#FFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M118,82 Q124,88 130,82" stroke="#FFF" stroke-width="2.5" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+
+          <div style="font-size: 2.4rem; z-index: 10; animation: chikuuFloat 2s infinite ease-in-out; margin-bottom: 25px;">
+            💖
+          </div>
+
+          <!-- Pigguu (You) -->
+          <div class="character-wrap" style="transform: translateX(-12px); width: 130px;">
+            <svg class="character-svg" viewBox="0 0 200 200">
+              <circle cx="100" cy="125" r="54" fill="#F8BBD0" />
+              <circle cx="95" cy="85" r="44" fill="#F8BBD0" />
+              <polygon points="50,42 73,70 37,76" fill="#F48FB1" />
+              <polygon points="140,42 117,70 153,76" fill="#F48FB1" />
+              <ellipse cx="68" cy="96" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="122" cy="96" rx="8" ry="5" fill="#FF8FA3" />
+              <ellipse cx="94" cy="95" rx="18" ry="12" fill="#F48FB1" stroke="#F06292" stroke-width="1.5" />
+              <path d="M72,82 Q78,88 84,82" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+              <path d="M108,82 Q114,88 120,82" stroke="#3E2723" stroke-width="2.5" fill="none" stroke-linecap="round" />
+            </svg>
+          </div>
+        </div>
+
+        <p style="font-size: clamp(1.1rem, 3vw, 1.4rem); font-weight: 700; color: #FFF; margin: 10px 0;">
+          “You are special to me, today and always.”[cite: 1]
+        </p>
+
+        <p style="font-size: clamp(0.95rem, 2.5vw, 1.1rem); color: #FFE8F2; line-height: 1.7; max-width: 480px; margin: 0 auto 25px auto;">
+          “I'm sorry, my love. Whenever you're ready, I'd love to make more beautiful memories with you.”[cite: 1]
+        </p>
+
+        <div style="display: flex; gap: 12px; justify-content: center; flex-wrap: wrap;">
+          <button class="btn-romantic" onclick="replayStory()">
+            <span>Replay our story</span>
+            <span>↺</span>
+          </button>
+
+          <button class="btn-soft" style="background: rgba(255,255,255,0.2); color: #fff; border-color: rgba(255,255,255,0.4);" onclick="sendHeartBurst(event)">
+            <span>Send a hug to Chikuu & Pigguu</span>
+            <span>🐾</span>
+          </button>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- Navigation Dots -->
+  <nav class="nav-bar" aria-label="Story Progress">
+    <div class="nav-dot active" onclick="goToScene(1)" title="Scene 1"></div>
+    <div class="nav-dot" onclick="goToScene(2)" title="Scene 2"></div>
+    <div class="nav-dot" onclick="goToScene(3)" title="Scene 3"></div>
+    <div class="nav-dot" onclick="goToScene(4)" title="Scene 4"></div>
+    <div class="nav-dot" onclick="goToScene(5)" title="Scene 5"></div>
+    <div class="nav-dot" onclick="goToScene(6)" title="Scene 6"></div>
+    <div class="nav-dot" onclick="goToScene(7)" title="Scene 7"></div>
+  </nav>
+
+  <!-- ==========================================================
+       VANILLA JAVASCRIPT
+       ========================================================== -->
+  <script>
+    let currentScene = 1;
+    const totalScenes = 7;
+
+    function goToScene(sceneNumber) {
+      if (sceneNumber < 1 || sceneNumber > totalScenes) return;
+      
+      const currentEl = document.getElementById(`scene-${currentScene}`);
+      const nextEl = document.getElementById(`scene-${sceneNumber}`);
+      
+      if (currentEl) currentEl.classList.remove('active');
+      currentScene = sceneNumber;
+      
+      if (nextEl) {
+        nextEl.classList.add('active');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      }
+
+      const dots = document.querySelectorAll('.nav-dot');
+      dots.forEach((dot, index) => {
+        dot.classList.toggle('active', index === currentScene - 1);
+      });
+    }
+
+    function replayStory() {
+      goToScene(1);
+    }
+
+    /* Scene 6 Choice Logic */
+    function handleChoice(type) {
+      const feedbackEl = document.getElementById('choice-feedback');
+      feedbackEl.classList.remove('show');
+      
+      setTimeout(() => {
+        if (type === 'call_now') {
+          feedbackEl.innerHTML = "I LOVE YOU CHIKUU! 🐃❤️";
+        } else if (type === 'call_later') {
+          feedbackEl.innerHTML = "I'll be waiting for you with my whole heart. 🤍";
+        }
+        feedbackEl.classList.add('show');
+      }, 150);
+
+      spawnBurst(window.event);
+    }
+
+    /* Ambient Canvas Particle Engine */
+    const canvas = document.getElementById('ambient-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+    let width = window.innerWidth;
+    let height = window.innerHeight;
+
+    function resizeCanvas() {
+      width = canvas.width = window.innerWidth;
+      height = canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class HeartParticle {
+      constructor() { this.reset(); }
+      reset() {
+        this.x = Math.random() * width;
+        this.y = height + 20 + Math.random() * 40;
+        this.size = Math.random() * 12 + 8;
+        this.speedY = Math.random() * 0.8 + 0.4;
+        this.speedX = (Math.random() - 0.5) * 0.5;
+        this.opacity = Math.random() * 0.5 + 0.2;
+        this.color = Math.random() > 0.4 ? '#FF8FA3' : '#FFD6B0';
+      }
+      update() {
+        this.y -= this.speedY;
+        this.x += this.speedX;
+        if (this.y < -30) this.reset();
+      }
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.globalAlpha = this.opacity;
+        ctx.fillStyle = this.color;
+        ctx.beginPath();
+        const topCurveHeight = this.size * 0.3;
+        ctx.moveTo(0, topCurveHeight);
+        ctx.bezierCurveTo(0, 0, -this.size / 2, 0, -this.size / 2, topCurveHeight);
+        ctx.bezierCurveTo(-this.size / 2, (this.size + topCurveHeight) / 2, 0, this.size, 0, this.size);
+        ctx.bezierCurveTo(0, this.size, this.size / 2, (this.size + topCurveHeight) / 2, this.size / 2, topCurveHeight);
+        ctx.bezierCurveTo(this.size / 2, 0, 0, 0, 0, topCurveHeight);
+        ctx.closePath();
+        ctx.fill();
+        ctx.restore();
+      }
+    }
+
+    const particleCount = window.innerWidth < 600 ? 18 : 36;
+    for (let i = 0; i < particleCount; i++) {
+      const p = new HeartParticle();
+      p.y = Math.random() * height;
+      particles.push(p);
+    }
+
+    function animateAmbient() {
+      ctx.clearRect(0, 0, width, height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(animateAmbient);
+    }
+    animateAmbient();
+
+    /* Sparkle Burst */
+    function spawnBurst(e) {
+      if (!e) return;
+      const x = e.clientX || window.innerWidth / 2;
+      const y = e.clientY || window.innerHeight / 2;
+      const symbols = ['💗', '🌸', '✨', '🤍', '🌷', '💍', '🐃'];
+      const burstLayer = document.getElementById('burst-layer');
+
+      for (let i = 0; i < 9; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'heart-particle';
+        particle.textContent = symbols[Math.floor(Math.random() * symbols.length)];
+        
+        const angle = Math.random() * Math.PI * 2;
+        const dist = Math.random() * 80 + 40;
+        const dx = `${Math.cos(angle) * dist}px`;
+        const dy = `${Math.sin(angle) * dist - 20}px`;
+
+        particle.style.left = `${x}px`;
+        particle.style.top = `${y}px`;
+        particle.style.setProperty('--dx', dx);
+        particle.style.setProperty('--dy', dy);
+
+        burstLayer.appendChild(particle);
+        setTimeout(() => particle.remove(), 1800);
+      }
+    }
+
+    function sendHeartBurst(e) {
+      spawnBurst(e);
+      playTone(523.25, 'sine', 0.15, 0.4);
+      setTimeout(() => playTone(659.25, 'sine', 0.15, 0.4), 100);
+      setTimeout(() => playTone(783.99, 'sine', 0.15, 0.6), 200);
+    }
+
+    /* Web Audio Synthesizer */
+    let audioCtx = null;
+    let isPlaying = false;
+    let melodyTimer = null;
+    const audioToggleBtn = document.getElementById('audio-toggle');
+    const notes = [261.63, 293.66, 329.63, 392.00, 440.00, 523.25, 659.25, 783.99];
+
+    function playTone(freq, type = 'sine', volume = 0.08, duration = 1.2) {
+      if (!audioCtx) return;
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(volume, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (err) {}
+    }
+
+    function playLullabyPattern() {
+      if (!isPlaying) return;
+      const randomNote = notes[Math.floor(Math.random() * notes.length)];
+      playTone(randomNote, 'sine', 0.06, 1.4);
+      const nextTime = Math.random() * 700 + 600;
+      melodyTimer = setTimeout(playLullabyPattern, nextTime);
+    }
+
+    function toggleAudio() {
+      if (!audioCtx) {
+        audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      }
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+      isPlaying = !isPlaying;
+      if (isPlaying) {
+        audioToggleBtn.textContent = '🔊';
+        audioToggleBtn.setAttribute('title', 'Mute gentle lullaby');
+        playLullabyPattern();
+      } else {
+        audioToggleBtn.textContent = '🎵';
+        audioToggleBtn.setAttribute('title', 'Play gentle lullaby');
+        clearTimeout(melodyTimer);
+      }
+    }
+
+    audioToggleBtn.addEventListener('click', toggleAudio);
+
+    window.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === 'PageDown') goToScene(currentScene + 1);
+      if (e.key === 'ArrowLeft' || e.key === 'PageUp') goToScene(currentScene - 1);
+    });
+  </script>
+</body>
+</html>
